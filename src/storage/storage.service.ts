@@ -29,12 +29,12 @@ export class StorageService {
 		}
 	}
 
-	async findOne(filename: string): Promise<File> {
+	async get(filename: string): Promise<File> {
 		const [files] = await this.bucket.getFiles({ prefix: filename })
 		return formatFiles(files)[0]
 	}
 
-	async findAll(filename: string): Promise<File[]> {
+	async find(filename: string): Promise<File[]> {
 		const [files] = await this.bucket.getFiles({ prefix: filename })
 		return formatFiles(files)
 	}
@@ -52,9 +52,7 @@ export class StorageService {
 	}
 
 	async rename(filename: string, name: string): Promise<CloudActionResponse> {
-		return await this.wrapCloudAction(async () => {
-			await this.bucket.file(filename).move(name)
-		})
+		return await this.move(filename, name)
 	}
 
 	async move(filename: string, dest: string): Promise<CloudActionResponse> {

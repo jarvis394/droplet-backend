@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common'
+import { Controller, Post, Body, Get } from '@nestjs/common'
 import { StorageService } from './storage.service'
 import { File } from './interfaces/File'
 import { FindFileDto } from './dto/findFile'
@@ -14,21 +14,29 @@ export class StorageController {
 	constructor(private readonly storageService: StorageService) {}
 
 	/**
-	 * Finds one file by its filename and returns as File
-	 * @param filename File name
+	 * Returns all entries in storage
 	 */
-	@Post('findOne')
-	findOne(@Body() { filename }: FindFileDto): Promise<File> {
-		return this.storageService.findOne(filename)
+	@Get('/')
+	getAll(): Promise<File[]> {
+		return this.storageService.find('')
 	}
 
 	/**
-	 * Finds all files in storage by filenameand returns them as File[]
+	 * Finds one file by its filename and returns as File
 	 * @param filename File name
 	 */
-	@Post('findAll')
-	findAll(@Body() { filename }: FindAllDto): Promise<File[]> {
-		return this.storageService.findAll(filename)
+	@Post('get')
+	get(@Body() { filename }: FindFileDto): Promise<File> {
+		return this.storageService.get(filename)
+	}
+
+	/**
+	 * Finds all files in storage by filename and returns them as File[]
+	 * @param filename File name
+	 */
+	@Post('find')
+	find(@Body() { filename }: FindAllDto): Promise<File[]> {
+		return this.storageService.find(filename)
 	}
 
 	/**
