@@ -1,5 +1,5 @@
 import { File as CloudFile } from '@google-cloud/storage'
-import { File } from '../storage/interfaces/file'
+import { File } from '../storage/interfaces/File'
 
 const formatFiles = (files: CloudFile[]): File[] => {
     return files.map(
