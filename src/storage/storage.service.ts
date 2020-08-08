@@ -5,6 +5,9 @@ import formatFiles from '../utils/formatFiles'
 import { CloudActionResponse } from './interfaces/CloudActionResponse'
 import * as path from 'path'
 
+// Includes configuration file into dist/ folder
+import '../config/storageCreds.json'
+
 @Injectable()
 export class StorageService {
 	private bucket: Bucket
