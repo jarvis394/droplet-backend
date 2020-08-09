@@ -4,6 +4,7 @@ import { Bucket, Storage } from '@google-cloud/storage'
 import formatFiles from '../utils/formatFiles'
 import { CloudActionResponse } from './interfaces/CloudActionResponse'
 import * as path from 'path'
+import { Readable } from 'stream'
 
 // Includes configuration file into dist/ folder
 import '../config/storageCreds.json'
@@ -64,6 +65,19 @@ export class StorageService {
 	async delete(filename: string): Promise<CloudActionResponse> {
 		return await this.wrapCloudAction(async () => {
 			await this.bucket.file(filename).delete()
+		})
+	}
+
+	async upload(file: Express.Multer.File): Promise<CloudActionResponse> {
+		return await this.wrapCloudAction(async () => {
+			const bucketFile = this.bucket.file(file.originalname)
+			const readable = new Readable()
+			// eslint-disable-next-line @typescript-eslint/no-empty-function
+			readable._read = () => {} // _read is required but you can noop it
+			readable.push(file.buffer)
+			readable.push(null)
+
+			readable.pipe(bucketFile.createWriteStream())
 		})
 	}
 }

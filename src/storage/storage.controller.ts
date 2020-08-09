@@ -1,4 +1,12 @@
-import { Controller, Post, Body, Get } from '@nestjs/common'
+import {
+	Controller,
+	Post,
+	Body,
+	Get,
+	UseInterceptors,
+	UploadedFile,
+} from '@nestjs/common'
+import { FileInterceptor } from '@nestjs/platform-express'
 import { StorageService } from './storage.service'
 import { File } from './interfaces/File'
 import { FindFileDto } from './dto/findFile'
@@ -44,7 +52,9 @@ export class StorageController {
 	 * @param filename File name
 	 */
 	@Post('toggleStarred')
-	toggleStarred(@Body() { filename }: ToggleStarredDto): Promise<CloudActionResponse> {
+	toggleStarred(
+		@Body() { filename }: ToggleStarredDto
+	): Promise<CloudActionResponse> {
 		return this.storageService.toggleStarred(filename)
 	}
 
@@ -54,7 +64,9 @@ export class StorageController {
 	 * @param updatedName New filename
 	 */
 	@Post('rename')
-	rename(@Body() { filename, updatedName }: FileRenameDto): Promise<CloudActionResponse> {
+	rename(
+		@Body() { filename, updatedName }: FileRenameDto
+	): Promise<CloudActionResponse> {
 		return this.storageService.rename(filename, updatedName)
 	}
 
@@ -64,7 +76,9 @@ export class StorageController {
 	 * @param destination New filename
 	 */
 	@Post('move')
-	move(@Body() { filename, destination }: FileMoveDto): Promise<CloudActionResponse> {
+	move(
+		@Body() { filename, destination }: FileMoveDto
+	): Promise<CloudActionResponse> {
 		return this.storageService.move(filename, destination)
 	}
 
@@ -75,5 +89,11 @@ export class StorageController {
 	@Post('delete')
 	delete(@Body() { filename }: FileDeleteDto): Promise<CloudActionResponse> {
 		return this.storageService.delete(filename)
+	}
+
+	@Post('upload')
+	@UseInterceptors(FileInterceptor('file'))
+	upload(@UploadedFile() file: Express.Multer.File): Promise<CloudActionResponse> {
+		return this.storageService.upload(file)
 	}
 }
