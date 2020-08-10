@@ -5,7 +5,9 @@ import {
 	Get,
 	UseInterceptors,
 	UploadedFile,
+	Res,
 } from '@nestjs/common'
+import { Response } from 'express'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { StorageService } from './storage.service'
 import { File } from './interfaces/File'
@@ -16,6 +18,7 @@ import { CloudActionResponse } from './interfaces/CloudActionResponse'
 import { FileRenameDto } from './dto/fileRename'
 import { FileMoveDto } from './dto/fileMove'
 import { FileDeleteDto } from './dto/fileDelete'
+import axios from 'axios'
 
 @Controller('storage')
 export class StorageController {
@@ -93,7 +96,29 @@ export class StorageController {
 
 	@Post('upload')
 	@UseInterceptors(FileInterceptor('file'))
-	upload(@UploadedFile() file: Express.Multer.File): Promise<CloudActionResponse> {
+	upload(
+		@UploadedFile() file: Express.Multer.File
+	): Promise<CloudActionResponse> {
 		return this.storageService.upload(file)
+	}
+
+	@Post('download')
+	async download(
+		@Res() res: Response,
+		@Body() { filename }: { filename: string }
+	): Promise<any> {
+		const downloadURLResponse = await this.storageService.download(filename)
+
+		if (!downloadURLResponse.done) return res.status(404).send('File not found')
+
+		const fileStream = await axios({
+			method: 'get',
+			responseType: 'stream',
+			url: downloadURLResponse.message,
+		})
+
+		// Set Content-Disposition header to make client download from a pipe flawlessly
+		res.setHeader('content-disposition', 'attachment; filename=' + filename)
+		return fileStream.data.pipe(res)
 	}
 }

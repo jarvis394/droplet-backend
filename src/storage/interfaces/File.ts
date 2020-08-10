@@ -19,7 +19,4 @@ export interface File {
 
 	/** File type */
 	contentType: string
-
-	/** Token to view the file */
-	token: string
 }

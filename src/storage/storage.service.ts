@@ -31,8 +31,8 @@ export class StorageService {
 	}
 
 	async get(filename: string): Promise<File> {
-		const [files] = await this.bucket.getFiles({ prefix: filename })
-		return formatFiles(files)[0]
+		const [file] = await this.bucket.file(filename).get()
+		return formatFiles([file])[0]
 	}
 
 	async find(filename: string): Promise<File[]> {
@@ -76,8 +76,20 @@ export class StorageService {
 			readable._read = () => {} // _read is required but you can noop it
 			readable.push(file.buffer)
 			readable.push(null)
+			readable.pipe(
+				bucketFile.createWriteStream({
+					metadata: { isStarred: false },
+					resumable: true,
+				})
+			)
+		})
+	}
 
-			readable.pipe(bucketFile.createWriteStream())
+	async download(filename: string): Promise<CloudActionResponse> {
+		return await this.wrapCloudAction(async () => {
+			const [file] = await this.bucket.file(filename).get()
+			const downloadURL = formatFiles([file])[0].downloadURL
+			return { message: downloadURL }
 		})
 	}
 }
