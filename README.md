@@ -5,8 +5,8 @@
 - [x] `find` (finds all entries by a given name)
 - [x] `move`
 - [x] `rename`
-- [ ] `upload`
-- [ ] `download`
+- [x] `upload`
+- [x] `download`
 - [x] `delete`
 
 For future: resumable uploads and downloads, delete multiple files, copying, progress of upload by WS
