@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common'
+import { Multer } from 'multer'
+import { upload as gcsUpload } from 'gcs-resumable-upload'
 import { File } from './interfaces/File'
 import { Bucket, Storage } from '@google-cloud/storage'
 import formatFiles from '../utils/formatFiles'
@@ -9,12 +11,14 @@ import { Readable } from 'stream'
 // Includes configuration file into dist/ folder
 import '../config/storageCreds.json'
 
+const storageCredsPath = path.resolve(__dirname, '../config/storageCreds.json')
+
 @Injectable()
 export class StorageService {
 	private bucket: Bucket
 	constructor() {
 		this.bucket = new Storage({
-			keyFilename: path.resolve(__dirname, '../config/storageCreds.json'),
+			keyFilename: storageCredsPath
 		}).bucket('my-droplet.appspot.com')
 	}
 
@@ -68,20 +72,17 @@ export class StorageService {
 		})
 	}
 
-	async upload(file: Express.Multer.File): Promise<CloudActionResponse> {
+	async upload(file: Multer.File): Promise<CloudActionResponse> {
 		return await this.wrapCloudAction(async () => {
-			const bucketFile = this.bucket.file(file.originalname)
-			const readable = new Readable()
-			// eslint-disable-next-line @typescript-eslint/no-empty-function
-			readable._read = () => {} // _read is required but you can noop it
-			readable.push(file.buffer)
-			readable.push(null)
-			readable.pipe(
-				bucketFile.createWriteStream({
-					metadata: { isStarred: false },
-					resumable: true,
-				})
-			)
+			const readable = Readable.from(file.buffer.toString())
+			
+			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+			//@ts-ignore
+			readable.pipe(gcsUpload({
+				authConfig: { keyFilename: storageCredsPath },
+				file: file.originalname,
+				bucket: this.bucket.name
+			})).on('progress', (data: any) => console.log(data))
 		})
 	}
 

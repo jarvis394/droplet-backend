@@ -8,6 +8,7 @@ import {
 	Res,
 } from '@nestjs/common'
 import { Response } from 'express'
+import { Multer } from 'multer'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { StorageService } from './storage.service'
 import { File } from './interfaces/File'
@@ -97,7 +98,7 @@ export class StorageController {
 	@Post('upload')
 	@UseInterceptors(FileInterceptor('file'))
 	upload(
-		@UploadedFile() file: Express.Multer.File
+		@UploadedFile() file: Multer.File
 	): Promise<CloudActionResponse> {
 		return this.storageService.upload(file)
 	}

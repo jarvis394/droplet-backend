@@ -13,7 +13,7 @@ const envVarsSchema: Joi.ObjectSchema = Joi.object({
     .valid('development', 'production')
     .default('development'),
   PORT: Joi.number().default(3000),
-  BASE_URL: Joi.string().default('https://localhost:3000/'),
+  GOOGLE_APPLICATION_CREDENTIALS: Joi.string()
 })
 
 /**
