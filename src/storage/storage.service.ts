@@ -82,7 +82,10 @@ export class StorageService {
 				authConfig: { keyFilename: storageCredsPath },
 				file: file.originalname,
 				bucket: this.bucket.name
-			})).on('progress', (data: any) => console.log(data))
+			}))
+			.on('progress', (data: any) => console.log('progress', data))
+			.on('finish', () => console.log('finished'))
+			.on('error', (data: any) => console.error('error', data))
 		})
 	}
 

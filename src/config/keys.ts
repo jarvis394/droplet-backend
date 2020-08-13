@@ -35,8 +35,3 @@ const env: EnvConfig = validate(dotenv.parse(fs.readFileSync(filePath)))
  * Application main port
  */
 export const PORT = Number(env.PORT)
-
-/**
- * Base URL for redirection
- */
-export const BASE_URL: string = env.BASE_URL
