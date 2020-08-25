@@ -35,3 +35,8 @@ const env: EnvConfig = validate(dotenv.parse(fs.readFileSync(filePath)))
  * Application main port
  */
 export const PORT = Number(env.PORT)
+
+/**
+ * GCS bucket name
+ */
+export const BUCKET_NAME = 'my-droplet.appspot.com'

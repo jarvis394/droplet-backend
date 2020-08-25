@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common'
-import { Multer } from 'multer'
-import { upload as gcsUpload } from 'gcs-resumable-upload'
 import { File } from './interfaces/File'
 import { Bucket, Storage } from '@google-cloud/storage'
 import formatFiles from '../utils/formatFiles'
 import { CloudActionResponse } from './interfaces/CloudActionResponse'
 import * as path from 'path'
-import { Readable, PassThrough } from 'stream'
+import { PassThrough } from 'stream'
+import { BUCKET_NAME } from '../config/keys'
+import * as streamProgress from 'progress-stream'
 
 // Includes configuration file into dist/ folder
 import '../config/storageCreds.json'
@@ -18,8 +18,8 @@ export class StorageService {
 	private bucket: Bucket
 	constructor() {
 		this.bucket = new Storage({
-			keyFilename: storageCredsPath
-		}).bucket('my-droplet.appspot.com')
+			keyFilename: storageCredsPath,
+		}).bucket(BUCKET_NAME)
 	}
 
 	private async wrapCloudAction(func: () => Promise<any>) {
@@ -72,32 +72,32 @@ export class StorageService {
 		})
 	}
 
-	async upload(file: Multer.File): Promise<CloudActionResponse> {
+	async upload(file: Express.Multer.File): Promise<CloudActionResponse> {
 		return await this.wrapCloudAction(async () => {
-			const readable = Readable.from(file.buffer.toString())
 			const bufferStream = new PassThrough()
 			const cloudFile = this.bucket.file(file.originalname)
+			const cloudStream = cloudFile.createWriteStream({
+				metadata: {
+					metadata: { isStarred: false },
+				},
+			})
+			const uploadProgress = streamProgress({
+				time: 100,
+				length: file.size
+			})
 
 			// Write data to stream
 			bufferStream.end(file.buffer)
+			bufferStream.pipe(cloudStream).pipe(uploadProgress)
 
-			console.log(Buffer.byteLength(file.buffer))
-			console.log(file.buffer.toString().length)
-
-			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-			//@ts-ignore
-			bufferStream.pipe(cloudFile.createWriteStream({
-//				authConfig: { keyFilename: storageCredsPath },
-//				file: file.originalname,
-//				bucket: this.bucket.name,
-				metadata: {
-//					contentLength: file.size,
-					metadata: { isStarred: false }
-				}
-			}))
-			.on('progress', (data: any) => console.log('progress', data))
-			.on('finish', (d: any) => console.log('finished', d))
-			.on('error', (data: any) => console.error('error', data))
+			return new Promise((resolve, reject) => {
+				uploadProgress
+					.on('progress', data => console.log(data))
+					.on('finish', () => console.log('Upload progress finished'))
+					.on('error', error => console.log(error))
+				bufferStream.on('end', () => resolve({ filename: file.originalname, size: file.size }))
+				bufferStream.on('error', error => reject({ error }))
+			})
 		})
 	}
 

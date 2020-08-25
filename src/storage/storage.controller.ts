@@ -8,7 +8,6 @@ import {
 	Res,
 } from '@nestjs/common'
 import { Response } from 'express'
-import { Multer } from 'multer'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { StorageService } from './storage.service'
 import { File } from './interfaces/File'
@@ -98,9 +97,8 @@ export class StorageController {
 	@Post('upload')
 	@UseInterceptors(FileInterceptor('file'))
 	upload(
-		@UploadedFile() file: Multer.File
+		@UploadedFile() file: Express.Multer.File
 	): Promise<CloudActionResponse> {
-		console.log(file)
 		return this.storageService.upload(file)
 	}
 
@@ -111,7 +109,10 @@ export class StorageController {
 	): Promise<any> {
 		const downloadURLResponse = await this.storageService.download(filename)
 
-		if (!downloadURLResponse.done) return res.status(404).send('File not found')
+		if (!downloadURLResponse.done)
+			return res
+				.status(404)
+				.send({ done: false, message: 'File not found' })
 
 		const fileStream = await axios({
 			method: 'get',
