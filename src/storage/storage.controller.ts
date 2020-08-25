@@ -100,6 +100,7 @@ export class StorageController {
 	upload(
 		@UploadedFile() file: Multer.File
 	): Promise<CloudActionResponse> {
+		console.log(file)
 		return this.storageService.upload(file)
 	}
 

@@ -6,7 +6,7 @@ import { Bucket, Storage } from '@google-cloud/storage'
 import formatFiles from '../utils/formatFiles'
 import { CloudActionResponse } from './interfaces/CloudActionResponse'
 import * as path from 'path'
-import { Readable } from 'stream'
+import { Readable, PassThrough } from 'stream'
 
 // Includes configuration file into dist/ folder
 import '../config/storageCreds.json'
@@ -75,16 +75,28 @@ export class StorageService {
 	async upload(file: Multer.File): Promise<CloudActionResponse> {
 		return await this.wrapCloudAction(async () => {
 			const readable = Readable.from(file.buffer.toString())
-			
+			const bufferStream = new PassThrough()
+			const cloudFile = this.bucket.file(file.originalname)
+
+			// Write data to stream
+			bufferStream.end(file.buffer)
+
+			console.log(Buffer.byteLength(file.buffer))
+			console.log(file.buffer.toString().length)
+
 			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			//@ts-ignore
-			readable.pipe(gcsUpload({
-				authConfig: { keyFilename: storageCredsPath },
-				file: file.originalname,
-				bucket: this.bucket.name
+			bufferStream.pipe(cloudFile.createWriteStream({
+//				authConfig: { keyFilename: storageCredsPath },
+//				file: file.originalname,
+//				bucket: this.bucket.name,
+				metadata: {
+//					contentLength: file.size,
+					metadata: { isStarred: false }
+				}
 			}))
 			.on('progress', (data: any) => console.log('progress', data))
-			.on('finish', () => console.log('finished'))
+			.on('finish', (d: any) => console.log('finished', d))
 			.on('error', (data: any) => console.error('error', data))
 		})
 	}
