@@ -8,7 +8,8 @@ const bootstrap = async (): Promise<void> => {
 
     // Nest app configuration
 	app.useGlobalPipes(new ValidationPipe())
-	
+	app.enableCors()
+
 	// Start listening
     await app.listen(config.PORT)
 }
